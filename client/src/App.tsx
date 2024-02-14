@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -21,9 +20,33 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
 const formSchema = z.object({
-  username: z.string().min(2, {
-    message: 'Username must be at least 2 characters.',
+  age: z.coerce.number().positive(),
+  gender: z.enum(['male', 'female'], {
+    required_error: 'You need to select a gender',
+  }),
+  income: z.coerce.number().positive(),
+  education: z.enum(
+    [
+      'high school diploma',
+      "associate's degree",
+      "bachelor's degree",
+      "master's degree",
+      'doctorate',
+    ],
+    {
+      required_error: 'You need to select a Education',
+    }
+  ),
+
+  marital_status: z.enum(['single', 'married'], {
+    required_error: 'You need to select a Marital Status',
+  }),
+  num_children: z.coerce.number().min(0),
+  home_ownership: z.enum(['rented', 'owned'], {
+    required_error: 'You need to select a Home Ownership',
   }),
 });
 
@@ -33,16 +56,46 @@ function App() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      age: 0,
+      income: 0,
+      num_children: 0,
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
     toast({
-      title: 'Scheduled: Catch up',
-      description: 'Friday, February 10, 2023 at 5:57 PM',
+      title: 'Submitted!',
+      description: `${values.age}`,
     });
+
+    const url = 'https://ibz.pythonanywhere.com/predict';
+
+    const requestBody = {
+      user_input: { ...values },
+    };
+
+    console.log(requestBody);
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log('Response:', data);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+      });
   }
 
   return (
@@ -69,22 +122,212 @@ function App() {
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
             <FormField
               control={form.control}
-              name='username'
+              name='age'
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Username</FormLabel>
+                  <FormLabel>Age</FormLabel>
                   <FormControl>
-                    <Input placeholder='shadcn' {...field} />
+                    <Input
+                      placeholder='Enter Your Age'
+                      type='number'
+                      {...field}
+                    />
                   </FormControl>
-                  <FormDescription>
-                    This is your public display name.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name='gender'
+              render={({ field }) => (
+                <FormItem className='space-y-3'>
+                  <FormLabel>Gender</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className='flex flex-col space-y-1'
+                    >
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='male' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Male</FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='female' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Female</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='income'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Income</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='Enter Your Income'
+                      type='number'
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='education'
+              render={({ field }) => (
+                <FormItem className='space-y-3'>
+                  <FormLabel>Education Attainment</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className='flex flex-col space-y-1'
+                    >
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='high school diploma' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>
+                          High School Diploma
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value="associate's degree" />
+                        </FormControl>
+                        <FormLabel className='font-normal'>
+                          Associate's Degree
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value="bachelor's degree" />
+                        </FormControl>
+                        <FormLabel className='font-normal'>
+                          Bachelor's Degree
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value="master's degree" />
+                        </FormControl>
+                        <FormLabel className='font-normal'>
+                          Master's Degre
+                        </FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='doctorate' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Doctorate</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='marital_status'
+              render={({ field }) => (
+                <FormItem className='space-y-3'>
+                  <FormLabel>Marital Status</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className='flex flex-col space-y-1'
+                    >
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='single' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Single</FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='married' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Married</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='num_children'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Children</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder='Enter Your Age'
+                      type='number'
+                      {...field}
+                    />
+                  </FormControl>
+
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='home_ownership'
+              render={({ field }) => (
+                <FormItem className='space-y-3'>
+                  <FormLabel>Home Ownership</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className='flex flex-col space-y-1'
+                    >
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='rented' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Rented</FormLabel>
+                      </FormItem>
+                      <FormItem className='flex items-center space-x-3 space-y-0'>
+                        <FormControl>
+                          <RadioGroupItem value='owned' />
+                        </FormControl>
+                        <FormLabel className='font-normal'>Owned</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button type='submit' onClick={() => {}}>
-              Show Toast
+              Submit
             </Button>
           </form>
         </Form>

@@ -9,4 +9,9 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/predict': 'https://ibz.pythonanywhere.com/predict',
+    },
+  },
 });
